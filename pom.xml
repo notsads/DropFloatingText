@@ -1,3 +1,4 @@
+cat > pom.xml << 'EOF'
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -38,4 +39,10 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
-                </config
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+EOF
