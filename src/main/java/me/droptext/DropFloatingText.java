@@ -37,26 +37,29 @@ public class DropFloatingText extends JavaPlugin implements Listener {
         });
     }
 
-    // ───────────────────────── EVENTS ─────────────────────────
+    // ───────────────── EVENTS ─────────────────
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
-        if (!getConfig().getBoolean("enabled")) return;
-
         Item item = e.getItemDrop();
-        World world = item.getWorld();
-
-        if (getConfig().getBoolean("worlds.whitelist")
-                && !getConfig().getStringList("worlds.list").contains(world.getName())) {
-            return;
-        }
+        if (holograms.containsKey(item.getUniqueId())) return;
 
         spawnHologram(item);
     }
 
     @EventHandler
     public void onMerge(ItemMergeEvent e) {
-        updateText(e.getTarget());
+        Item source = e.getEntity();
+        Item target = e.getTarget();
+
+        // ❌ remove hologram from source item
+        remove(source);
+
+        // ✅ update hologram text on target item
+        ArmorStand stand = holograms.get(target.getUniqueId());
+        if (stand != null) {
+            stand.setCustomName(format(target.getItemStack()));
+        }
     }
 
     @EventHandler
@@ -69,38 +72,26 @@ public class DropFloatingText extends JavaPlugin implements Listener {
         remove(e.getEntity());
     }
 
-    // ───────────────────────── LOGIC ─────────────────────────
+    // ───────────────── LOGIC ─────────────────
 
     private void spawnHologram(Item item) {
-        UUID id = item.getUniqueId();
-
-        if (holograms.containsKey(id)) return;
-
         ArmorStand stand = item.getWorld().spawn(item.getLocation(), ArmorStand.class, as -> {
             as.setInvisible(true);
             as.setMarker(true);
             as.setGravity(false);
-            as.setCustomNameVisible(true);
             as.setSmall(true);
+            as.setCustomNameVisible(true);
             as.setCustomName(format(item.getItemStack()));
         });
 
-        // 🔥 FIX: make hologram a passenger (smooth movement)
+        // ✅ Attach as passenger (smooth movement, no slideshow)
         item.addPassenger(stand);
 
-        holograms.put(id, stand);
-    }
-
-    private void updateText(Item item) {
-        ArmorStand stand = holograms.get(item.getUniqueId());
-        if (stand != null) {
-            stand.setCustomName(format(item.getItemStack()));
-        }
+        holograms.put(item.getUniqueId(), stand);
     }
 
     private void remove(Item item) {
         UUID id = item.getUniqueId();
-
         ArmorStand stand = holograms.remove(id);
         if (stand != null) {
             stand.remove();
