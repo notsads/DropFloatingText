@@ -69,6 +69,7 @@ public class DropFloatingText extends JavaPlugin implements Listener {
         remove(e.getItem());
     }
 
+
     @EventHandler
     public void onDespawn(ItemDespawnEvent e) {
         remove(e.getEntity());
