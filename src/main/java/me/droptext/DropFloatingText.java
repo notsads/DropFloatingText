@@ -1,17 +1,17 @@
 package me.droptext;
 
-import org.bukkit.*;
+import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,12 +20,12 @@ import java.util.UUID;
 public class DropFloatingText extends JavaPlugin implements Listener {
 
     private final Map<UUID, ArmorStand> holograms = new HashMap<>();
-    private final Map<UUID, BukkitTask> tasks = new HashMap<>();
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+
         getCommand("droptext").setExecutor((sender, cmd, label, args) -> {
             if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
                 reloadConfig();
@@ -36,6 +36,8 @@ public class DropFloatingText extends JavaPlugin implements Listener {
             return true;
         });
     }
+
+    // ───────────────────────── EVENTS ─────────────────────────
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
@@ -58,41 +60,35 @@ public class DropFloatingText extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onDespawn(ItemDespawnEvent e) {
-        remove(e.getEntity());
-    }
-
-    @EventHandler
     public void onPickup(PlayerPickupItemEvent e) {
         remove(e.getItem());
     }
 
+    @EventHandler
+    public void onDespawn(ItemDespawnEvent e) {
+        remove(e.getEntity());
+    }
+
+    // ───────────────────────── LOGIC ─────────────────────────
+
     private void spawnHologram(Item item) {
         UUID id = item.getUniqueId();
 
-        double height = getConfig().getDouble("hologram.height");
-        int interval = getConfig().getInt("update-interval-ticks");
+        if (holograms.containsKey(id)) return;
 
-        ArmorStand stand = item.getWorld().spawn(item.getLocation().add(0, height, 0), ArmorStand.class, as -> {
+        ArmorStand stand = item.getWorld().spawn(item.getLocation(), ArmorStand.class, as -> {
             as.setInvisible(true);
             as.setMarker(true);
             as.setGravity(false);
             as.setCustomNameVisible(true);
             as.setSmall(true);
+            as.setCustomName(format(item.getItemStack()));
         });
 
+        // 🔥 FIX: make hologram a passenger (smooth movement)
+        item.addPassenger(stand);
+
         holograms.put(id, stand);
-
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(this, () -> {
-            if (!item.isValid()) {
-                remove(item);
-                return;
-            }
-            stand.teleport(item.getLocation().add(0, height, 0));
-            stand.setCustomName(format(item.getItemStack()));
-        }, 0L, interval);
-
-        tasks.put(id, task);
     }
 
     private void updateText(Item item) {
@@ -105,14 +101,9 @@ public class DropFloatingText extends JavaPlugin implements Listener {
     private void remove(Item item) {
         UUID id = item.getUniqueId();
 
-        if (tasks.containsKey(id)) {
-            tasks.get(id).cancel();
-            tasks.remove(id);
-        }
-
-        if (holograms.containsKey(id)) {
-            holograms.get(id).remove();
-            holograms.remove(id);
+        ArmorStand stand = holograms.remove(id);
+        if (stand != null) {
+            stand.remove();
         }
     }
 
@@ -120,10 +111,11 @@ public class DropFloatingText extends JavaPlugin implements Listener {
         String name = item.getType().name().toLowerCase().replace("_", " ");
         name = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-        String format = getConfig().getString("hologram.format");
+        String format = getConfig().getString("hologram.format", "&f{item} &7× {amount}");
+
         return ChatColor.translateAlternateColorCodes('&',
                 format.replace("{item}", name)
-                        .replace("{amount}", String.valueOf(item.getAmount()))
+                      .replace("{amount}", String.valueOf(item.getAmount()))
         );
     }
 }
