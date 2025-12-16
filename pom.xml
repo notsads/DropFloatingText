@@ -8,13 +8,9 @@
     <groupId>me.droptext</groupId>
     <artifactId>DropFloatingText</artifactId>
     <version>1.0</version>
-    <packaging>jar</packaging>
-
-    <name>DropFloatingText</name>
 
     <properties>
         <java.version>21</java.version>
-        <paper.version>1.21.1-R0.1-SNAPSHOT</paper.version>
     </properties>
 
     <repositories>
@@ -25,41 +21,24 @@
     </repositories>
 
     <dependencies>
-        <!-- Paper API -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>${paper.version}</version>
+            <version>1.21-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Java 21 compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
-            </plugin>
-
-            <!-- Shade plugin (optional but safe) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
