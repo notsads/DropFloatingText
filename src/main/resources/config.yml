@@ -1,0 +1,16 @@
+enabled: true
+
+only-player-drops: true
+
+update-interval-ticks: 10   # 10 = every 0.5s
+
+hologram:
+  height: 0.6
+  format: "&f{item} &7× {amount}"
+
+worlds:
+  whitelist: true
+  list:
+    - world
+    - world_nether
+    - world_the_end
